@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="static/listpdf.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+                <li><a href="/upload">Upload Document</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="filter">
+            <form method="GET" action="/">
+                <input type="text" name="search" placeholder="Search documents...">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        <div class="document-list">
+            <h1>{{.Title}}</h1>
+            <ul>
+                {{range .Documents}}
+                <li>{{.Title}} - <a href="{{.FilePath}}">Download</a></li>
+                {{else}}
+                <li>No documents found.</li>
+                {{end}}
+            </ul>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Document Uploads. All rights reserved.</p>
+    </footer>
+</body>
+</html>
