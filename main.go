@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/ezrahel/pdfupload/handlers"
@@ -10,6 +11,12 @@ import (
 
 func main() {
 	handlers.DB()
+	err := handlers.Car("Lexus", "GLK", 2024)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+	} else {
+		log.Println("Car successfully inserted!")
+	}
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static"))))
 	http.HandleFunc("/create", handlers.CreatePDF)
 	http.HandleFunc("/register", handlers.Register)

@@ -3,18 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Upload - Learning Resources</title>
-    <link rel="stylesheet" href="static/home.css">
+    <title>Upload PDF</title>
+    <link rel="stylesheet" href="/static/upload.css">
 </head>
 <body>
 
-    <div class="upload-container">
-        <h1>Upload Your PDF, {{.}}</h1>
-        <form action="/create" method="post" enctype="multipart/form-data">
-            <input type="file" name="pdf" accept="application/pdf" required><br>
-            <input type="submit" value="Upload PDF">
-        </form>
+    <!-- Trigger button to open the modal -->
+    <div class="container">
+        <button class="open-modal-btn" onclick="openModal()">Upload PDF</button>
     </div>
 
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <h1>Hello, Upload a PDF</h1>
+            
+            <form action="/create" method="POST" enctype="multipart/form-data">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" required>
+                
+                <label for="author">Author:</label>
+                <input type="text" id="author" name="author" required>
+                
+                <label for="pdffile">Select PDF:</label>
+                <input type="file" id="pdffile" name="pdffile" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.odt" required>
+
+                
+                <button type="submit">Upload PDF</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript to handle modal open and close -->
+    <script>
+        function openModal() {
+            document.getElementById("modalOverlay").classList.add("show");
+        }
+
+        function closeModal() {
+            document.getElementById("modalOverlay").classList.remove("show");
+        }
+    </script>
 </body>
 </html>

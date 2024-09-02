@@ -27,19 +27,20 @@
         </div>
 
         <div class="document-list">
-            <h1>{{.Title}}</h1>
-            <ul>
-                {{range .Documents}}
-                <li>{{.Title}} - <a href="{{.FilePath}}">Download</a></li>
-                {{else}}
-                <li>No documents found.</li>
-                {{end}}
-            </ul>
+            <h1>This is a pdf list</h1>
+            <h2>Welcome {{.Title}}</h2>
+            <h3>This is your pdf file</h3>
+            <div class="list">
+                {{range $i := .}}
+            
+            <a href="/uploads/PIRATE KING Resume - White.docx">{{$i}}</a>
+            {{end}}
+        </div>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2023 Document Uploads. All rights reserved.</p>
+        <p>&copy; 2024 Document Uploads. All rights reserved.</p>
     </footer>
 </body>
 </html>

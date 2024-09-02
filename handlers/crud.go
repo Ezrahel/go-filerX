@@ -24,73 +24,90 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func InstancePDF(title string, author string, mypdf os.File) error {
+	db, err := DB()
+	if err != nil {
+		log.Fatalf("Database connection error: %v", err)
+
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Error closing database: %v\n", err)
+		}
+	}()
+
+	query := "INSERT INTO pdf (title, author, mypdf)"
+	exe, err := db.Exec(query, title, author, mypdf)
+	if err != nil {
+		log.Printf("Error inserting to db: %v", err)
+		return fmt.Errorf("Error inserting to db: %v", err)
+	}
+	log.Printf("PDF %s %s %v inserted successfully!", title, author, exe)
+	return nil
+}
 func CreatePDF(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	} else {
-		_, err := template.ParseFiles("frontend/homepage.html")
+	if r.Method == http.MethodGet {
+		tmpl, err := template.ParseFiles("frontend/homepage.html")
 		if err != nil {
 			http.Error(w, "could not parse template", http.StatusBadRequest)
 		}
-	}
-
-	// Parse the form data
-	err := r.ParseMultipartForm(50 << 20) // 10 MB
-	if err != nil {
-		http.Error(w, "Error parsing form data", http.StatusBadRequest)
+		tmpl.Execute(w, tmpl)
 		return
 	}
 
-	// Extract form values
-	title := r.FormValue("title")
-	author := r.FormValue("author")
+	if r.Method == http.MethodPost {
+		err := r.ParseMultipartForm(50 << 20)
+		if err != nil {
+			http.Error(w, "Error parsing form data", http.StatusBadRequest)
+			return
+		}
+		title := r.FormValue("title")
+		author := r.FormValue("author")
+		file, handler, err := r.FormFile("pdffile")
+		if err != nil {
+			http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+			log.Printf("Error retrieving the file: %v\n", err)
+			return
+		}
+		defer file.Close()
 
-	// Extract the file
-	file, handler, err := r.FormFile("pdfFile")
-	if err != nil {
-		http.Error(w, "Error retrieving the file", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
+		filePath := filepath.Join("uploads", handler.Filename)
+		dst, err := os.Create(filePath)
+		if err != nil {
+			http.Error(w, "Error saving the file", http.StatusInternalServerError)
+			return
+		}
+		defer dst.Close()
 
-	filePath := filepath.Join("uploads", handler.Filename)
-	dst, err := os.Create(filePath)
-	if err != nil {
-		http.Error(w, "Error saving the file", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
+		_, err = dst.ReadFrom(file)
+		if err != nil {
+			http.Error(w, "Error writing the file", http.StatusInternalServerError)
+			return
+		}
+		details := User{
+			Username: username,
+		}
+		pdf := PdfResource{
+			Title:   title,
+			PdfFile: filePath,
+			Author:  author,
+		}
 
-	_, err = dst.ReadFrom(file)
-	if err != nil {
-		http.Error(w, "Error writing the file", http.StatusInternalServerError)
-		return
-	}
+		fmt.Printf("Saved PDF: %+v\n", pdf)
 
-	// Create a new PdfResource instance
-	pdf := PdfResource{
-		Title:   title,
-		PdfFile: filePath,
-		Author:  author,
-	}
+		w.WriteHeader(http.StatusCreated)
+		fmt.Println(details)
+		tmpl, err := template.ParseFiles("frontend/listpdf.html")
+		if err != nil {
+			http.Error(w, "Error parsing template", http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, pdf)
+		if err != nil {
+			http.Error(w, "error executing template", http.StatusInternalServerError)
+			return
+		}
 
-	// Save the PdfResource to the database or any storage
-	// For demonstration, we will just print it
-	fmt.Printf("Saved PDF: %+v\n", pdf)
-
-	// Return a response to the client
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "PDF created successfully")
-	tmpl, err := template.ParseFiles("frontend/homepage.html")
-	if err != nil {
-		http.Error(w, "Error parsing template", http.StatusInternalServerError)
-		return
-	}
-	err = tmpl.Execute(w, pdf)
-	if err != nil {
-		http.Error(w, "error executing template", http.StatusInternalServerError)
-		return
 	}
 }
 
@@ -149,6 +166,10 @@ func GetPDF() ([]PdfResource, error) {
 }
 
 func GetPDFs(w http.ResponseWriter, r *http.Request) {
+	// var getRes []PdfResource
+	// for _, v:= range getRes{
+
+	// }
 	pdfs, err := GetPDF()
 	if err != nil {
 		http.Error(w, "Error getting PDFs", http.StatusInternalServerError)
