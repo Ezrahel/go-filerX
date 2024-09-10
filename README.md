@@ -1,5 +1,4 @@
-# pdfuploader
-# PDF Upload Site
+# go-filerX
 
 This project was born out of frustration when I discovered that my favorite PDF hosting site no longer allowed free downloads and many of the PDFs I relied on had been deleted. Perhaps they were reported by competitors.
 
