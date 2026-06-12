@@ -3,47 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload PDF</title>
+    <title>FilerX — Free document library</title>
     <link rel="stylesheet" href="/static/upload.css">
 </head>
 <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
 
-    <!-- Trigger button to open the modal -->
-    <div class="container">
-        <button class="open-modal-btn" onclick="openModal()">Upload PDF</button>
-    </div>
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="FilerX home">
+            <span class="brand-mark">Fx</span>
+            <span>FilerX</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary navigation">
+            <a href="/listpdf">Library</a>
+            <a href="/register">Create account</a>
+            <a class="nav-pill" href="/login">Sign in</a>
+        </nav>
+    </header>
 
-    <!-- Modal Overlay -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-container">
-            <button class="close-btn" onclick="closeModal()">×</button>
-            <h1>Hello, Upload a PDF</h1>
-            
-            <form action="/create" method="POST" enctype="multipart/form-data">
-                <label for="title">Title:</label>
-                <input type="text" id="title" name="title" required>
-                
-                <label for="author">Author:</label>
-                <input type="text" id="author" name="author" required>
-                
-                <label for="pdffile">Select PDF:</label>
-                <input type="file" id="pdffile" name="pdffile" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.odt" required>
+    <main class="shell">
+        <section class="hero">
+            <p class="eyebrow">Open uploads. Free downloads. Community preserved.</p>
+            <h1>Share documents without gatekeepers.</h1>
+            <p class="hero-copy">
+                FilerX is a clean, resilient place to upload useful PDFs and documents so everyone can keep learning,
+                researching, and building without broken links or surprise paywalls.
+            </p>
+            <div class="hero-actions">
+                <a class="button button-primary" href="#upload-panel">Upload a document</a>
+                <a class="button button-secondary" href="/listpdf">Browse library</a>
+            </div>
+            <dl class="stats" aria-label="Platform highlights">
+                <div>
+                    <dt>50 MB</dt>
+                    <dd>max upload</dd>
+                </div>
+                <div>
+                    <dt>9</dt>
+                    <dd>file formats</dd>
+                </div>
+                <div>
+                    <dt>Free</dt>
+                    <dd>download access</dd>
+                </div>
+            </dl>
+        </section>
 
-                
-                <button type="submit">Upload PDF</button>
+        <section class="upload-card" id="upload-panel" aria-labelledby="upload-title">
+            <div class="card-header">
+                <span class="card-kicker">New upload</span>
+                <h2 id="upload-title">Add to the library</h2>
+                <p>Accepted: PDF, Word, PowerPoint, Excel, OpenDocument, and text files.</p>
+            </div>
+
+            <form action="/create" method="POST" enctype="multipart/form-data" class="upload-form">
+                <label for="title">Document title</label>
+                <input type="text" id="title" name="title" placeholder="e.g. Distributed Systems Notes" required>
+
+                <label for="author">Author or source</label>
+                <input type="text" id="author" name="author" placeholder="e.g. Grace Hopper" required>
+
+                <label for="pdffile">Choose file</label>
+                <label class="file-drop" for="pdffile">
+                    <span class="file-icon">⇧</span>
+                    <span>
+                        <strong>Drop in your document</strong>
+                        <small>or click to select from your device</small>
+                    </span>
+                </label>
+                <input class="visually-hidden" type="file" id="pdffile" name="pdffile" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.odt" required>
+
+                <button class="button button-primary upload-submit" type="submit">Publish document</button>
             </form>
-        </div>
-    </div>
-
-    <!-- JavaScript to handle modal open and close -->
-    <script>
-        function openModal() {
-            document.getElementById("modalOverlay").classList.add("show");
-        }
-
-        function closeModal() {
-            document.getElementById("modalOverlay").classList.remove("show");
-        }
-    </script>
+        </section>
+    </main>
 </body>
 </html>

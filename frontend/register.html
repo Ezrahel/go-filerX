@@ -3,38 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDFdrive Registration Form</title>
-    <link rel="stylesheet" href="static/register.css">
+    <title>Create a FilerX account</title>
+    <link rel="stylesheet" href="/static/register.css">
 </head>
 <body>
-    <div class="form-container">
-        <h2>Create an Account</h2>
-        <form action="/register" method="post">
-            <div class="form-group">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="auth-shell">
+        <section class="auth-copy">
+            <a class="brand" href="/" aria-label="FilerX home">
+                <span class="brand-mark">Fx</span>
+                <span>FilerX</span>
+            </a>
+            <p class="eyebrow">Join the archive</p>
+            <h1>Preserve useful documents for everyone.</h1>
+            <p>Create a free account to help grow a clean, open library of downloadable files.</p>
+        </section>
+
+        <section class="auth-card" aria-labelledby="register-title">
+            <p class="card-kicker">Create account</p>
+            <h2 id="register-title">Start uploading</h2>
+            <form action="/register" method="post">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
-            </div>
+                <input type="text" id="username" name="username" minlength="3" maxlength="20" placeholder="choose a username" required>
 
-          
-
-            <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
+                <input type="password" id="password" name="password" minlength="8" placeholder="minimum 8 characters" required>
 
-        
+                <label class="terms" for="terms">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <span>I agree to keep uploads useful, lawful, and community-safe.</span>
+                </label>
 
-            <div class="form-group terms">
-                <input type="checkbox" id="terms" name="terms" required>
-                <label for="terms">I agree to the <a href="#">Terms and Conditions</a></label>
-            </div>
-
-            <button type="submit">Register</button>
-
-            <div class="extra-info">
-                <p>Already have an account? <a href="/login">Log in here</a></p>
-            </div>
-        </form>
-    </div>
+                <button class="button button-primary" type="submit">Create account</button>
+            </form>
+            <p class="switch-link">Already have an account? <a href="/login">Sign in</a></p>
+        </section>
+    </main>
 </body>
 </html>

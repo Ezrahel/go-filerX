@@ -1,124 +1,86 @@
 package handlers
 
 import (
-	"fmt"
+	"errors"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
+const maxUploadSize = 50 << 20
+
 func Home(w http.ResponseWriter, r *http.Request) {
-	name := "Israel"
-	log.Printf("%v", name)
-	if r.Method == http.MethodGet {
-		tmpl, err := template.ParseFiles("frontend/homepage.html")
-		if err != nil {
-			http.Error(w, "Error loading template", http.StatusInternalServerError)
-			log.Printf("Error loading template: %v\n", err)
-			return
-		}
-		tmpl.Execute(w, name)
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	tmpl, err := template.ParseFiles("frontend/homepage.html")
+	if err != nil {
+		http.Error(w, "error loading template", http.StatusInternalServerError)
+		log.Printf("home template error: %v", err)
+		return
+	}
+	if err := tmpl.Execute(w, nil); err != nil {
+		http.Error(w, "error rendering template", http.StatusInternalServerError)
+	}
 }
 
-func InstancePDF(title string, author string, mypdf os.File) error {
-	db, err := DB()
-	if err != nil {
-		log.Fatalf("Database connection error: %v", err)
-
-	}
-	defer func() {
-		if err := db.Close(); err != nil {
-			log.Printf("Error closing database: %v\n", err)
-		}
-	}()
-
-	query := "INSERT INTO pdf (title, author, mypdf)"
-	exe, err := db.Exec(query, title, author, mypdf)
-	if err != nil {
-		log.Printf("Error inserting to db: %v", err)
-		return fmt.Errorf("Error inserting to db: %v", err)
-	}
-	log.Printf("PDF %s %s %v inserted successfully!", title, author, exe)
-	return nil
-}
 func CreatePDF(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		tmpl, err := template.ParseFiles("frontend/homepage.html")
-		if err != nil {
-			http.Error(w, "could not parse template", http.StatusBadRequest)
-		}
-		tmpl.Execute(w, tmpl)
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
-	if r.Method == http.MethodPost {
-		err := r.ParseMultipartForm(50 << 20)
-		if err != nil {
-			http.Error(w, "Error parsing form data", http.StatusBadRequest)
-			return
-		}
-		title := r.FormValue("title")
-		author := r.FormValue("author")
-		file, handler, err := r.FormFile("pdffile")
-		if err != nil {
-			http.Error(w, "Error retrieving the file", http.StatusBadRequest)
-			log.Printf("Error retrieving the file: %v\n", err)
-			return
-		}
-		defer file.Close()
-
-		filePath := filepath.Join("uploads", handler.Filename)
-		dst, err := os.Create(filePath)
-		if err != nil {
-			http.Error(w, "Error saving the file", http.StatusInternalServerError)
-			return
-		}
-		defer dst.Close()
-
-		_, err = dst.ReadFrom(file)
-		if err != nil {
-			http.Error(w, "Error writing the file", http.StatusInternalServerError)
-			return
-		}
-		details := User{
-			Username: username,
-		}
-		pdf := PdfResource{
-			Title:   title,
-			PdfFile: filePath,
-			Author:  author,
-		}
-
-		fmt.Printf("Saved PDF: %+v\n", pdf)
-
-		w.WriteHeader(http.StatusCreated)
-		fmt.Println(details)
-		tmpl, err := template.ParseFiles("frontend/listpdf.html")
-		if err != nil {
-			http.Error(w, "Error parsing template", http.StatusInternalServerError)
-			return
-		}
-		err = tmpl.Execute(w, pdf)
-		if err != nil {
-			http.Error(w, "error executing template", http.StatusInternalServerError)
-			return
-		}
-
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		http.Error(w, "file too large or invalid form data", http.StatusBadRequest)
+		return
 	}
+
+	file, fileHeader, err := r.FormFile("pdffile")
+	if err != nil {
+		http.Error(w, "file is required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	fileName, err := safeUploadName(fileHeader.Filename)
+	if err != nil {
+		http.Error(w, "invalid file name", http.StatusBadRequest)
+		return
+	}
+
+	ext := strings.ToLower(filepath.Ext(fileName))
+	allowed := map[string]bool{".pdf": true, ".doc": true, ".docx": true, ".ppt": true, ".pptx": true, ".xls": true, ".xlsx": true, ".txt": true, ".odt": true}
+	if !allowed[ext] {
+		http.Error(w, "unsupported file type", http.StatusBadRequest)
+		return
+	}
+
+	dstPath := filepath.Join(uploadDir, fileName)
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		http.Error(w, "failed to save file", http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, file); err != nil {
+		http.Error(w, "failed to write file", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/listpdf", http.StatusSeeOther)
 }
 
 func DeletePDF(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Error passing form", http.StatusInternalServerError)
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	fileName := r.FormValue("fileName")
@@ -126,63 +88,35 @@ func DeletePDF(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "filename is required", http.StatusBadRequest)
 		return
 	}
-	filePath := filepath.Join("uploads", fileName)
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		http.Error(w, "File not found", http.StatusNotFound)
+	path := filepath.Join(uploadDir, filepath.Base(fileName))
+	if err := os.Remove(path); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			http.Error(w, "file not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "could not delete file", http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("Deleted PDF: %s\n", fileName)
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "PDF deleted successfully")
-}
-
-func GetAuthor(author string) string {
-	var pdf []PdfResource
-	for _, v := range pdf {
-		fmt.Printf("%v", v.Author)
-		author = v.Author
-	}
-	return author
-}
-
-func GetPDF() ([]PdfResource, error) {
-	var documents []PdfResource
-	err := filepath.Walk("uploads", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() {
-			document := PdfResource{
-				Title:   info.Name(),
-				PdfFile: path,
-				Author:  GetAuthor(path),
-			}
-			documents = append(documents, document)
-		}
-		return nil
-	})
-	return documents, err
+	http.Redirect(w, r, "/listpdf", http.StatusSeeOther)
 }
 
 func GetPDFs(w http.ResponseWriter, r *http.Request) {
-	// var getRes []PdfResource
-	// for _, v:= range getRes{
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	pdfs, err := listUploadedFiles()
+	if err != nil {
+		http.Error(w, "error reading uploads", http.StatusInternalServerError)
+		return
+	}
 
-	// }
-	pdfs, err := GetPDF()
+	tmpl, err := template.ParseFiles("frontend/listpdf.html")
 	if err != nil {
-		http.Error(w, "Error getting PDFs", http.StatusInternalServerError)
+		http.Error(w, "error parsing template", http.StatusInternalServerError)
 		return
 	}
-	tmpl, err := template.ParseFiles("frontend/pdfs.html")
-	if err != nil {
-		http.Error(w, "Error parsing template", http.StatusInternalServerError)
-		return
-	}
-	err = tmpl.Execute(w, pdfs)
-	if err != nil {
-		http.Error(w, "Error executing template", http.StatusInternalServerError)
-		return
+	if err := tmpl.Execute(w, pdfs); err != nil {
+		http.Error(w, "error rendering template", http.StatusInternalServerError)
 	}
 }
