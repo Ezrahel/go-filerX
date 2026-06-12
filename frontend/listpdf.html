@@ -3,44 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}}</title>
-    <link rel="stylesheet" href="static/listpdf.css">
+    <title>FilerX Library</title>
+    <link rel="stylesheet" href="/static/listpdf.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/about">About</a></li>
-                <li><a href="/contact">Contact</a></li>
-                <li><a href="/upload">Upload Document</a></li>
-            </ul>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="FilerX home">
+            <span class="brand-mark">Fx</span>
+            <span>FilerX</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary navigation">
+            <a href="/">Upload</a>
+            <a href="/register">Create account</a>
+            <a class="nav-pill" href="/login">Sign in</a>
         </nav>
     </header>
 
-    <main>
-        <div class="filter">
-            <form method="GET" action="/">
-                <input type="text" name="search" placeholder="Search documents...">
-                <button type="submit">Search</button>
-            </form>
-        </div>
+    <main class="library-shell">
+        <section class="library-hero">
+            <p class="eyebrow">Community archive</p>
+            <h1>Documents ready to download.</h1>
+            <p>Browse the latest uploads preserved by the FilerX community.</p>
+        </section>
 
-        <div class="document-list">
-            <h1>This is a pdf list</h1>
-            <h2>Welcome {{.Title}}</h2>
-            <h3>This is your pdf file</h3>
-            <div class="list">
-                {{range $i := .}}
-            
-            <a href="/uploads/PIRATE KING Resume - White.docx">{{$i}}</a>
-            {{end}}
-        </div>
-        </div>
+        <section class="library-panel" aria-labelledby="library-title">
+            <div class="panel-header">
+                <div>
+                    <p class="card-kicker">Library</p>
+                    <h2 id="library-title">{{len .}} uploaded documents</h2>
+                </div>
+                <a class="button button-primary" href="/">Upload new</a>
+            </div>
+
+            <div class="document-grid">
+                {{if .}}
+                    {{range .}}
+                    <article class="document-card">
+                        <div class="doc-icon">PDF</div>
+                        <div class="doc-body">
+                            <h3>{{.Title}}</h3>
+                            <p>Available for free download from the shared archive.</p>
+                            <div class="doc-actions">
+                                <a class="button button-secondary" href="{{.PdfFile}}" download>Download</a>
+                                <form method="POST" action="/delete">
+                                    <input type="hidden" name="fileName" value="{{.Title}}">
+                                    <button class="button button-danger" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                    {{end}}
+                {{else}}
+                    <div class="empty-state">
+                        <div class="empty-icon">✦</div>
+                        <h3>No uploads yet</h3>
+                        <p>Be the first to preserve a useful document for everyone.</p>
+                        <a class="button button-primary" href="/">Upload the first document</a>
+                    </div>
+                {{end}}
+            </div>
+        </section>
     </main>
-
-    <footer>
-        <p>&copy; 2024 Document Uploads. All rights reserved.</p>
-    </footer>
 </body>
 </html>

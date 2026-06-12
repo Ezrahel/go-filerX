@@ -3,22 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Form</title>
-    <link rel="stylesheet" href="static/login.css">
+    <title>Sign in to FilerX</title>
+    <link rel="stylesheet" href="/static/login.css">
 </head>
 <body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <form action="/login" method="POST">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username" required>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
 
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+    <main class="auth-shell">
+        <section class="auth-copy">
+            <a class="brand" href="/" aria-label="FilerX home">
+                <span class="brand-mark">Fx</span>
+                <span>FilerX</span>
+            </a>
+            <p class="eyebrow">Welcome back</p>
+            <h1>Return to your document commons.</h1>
+            <p>Sign in to continue uploading and preserving resources for the community.</p>
+        </section>
 
-            <input type="submit" value="Login">
-        </form>
-        <p>Don't have an account? <a href="/register">Register here</a></p>
-    </div>
+        <section class="auth-card" aria-labelledby="login-title">
+            <p class="card-kicker">Secure access</p>
+            <h2 id="login-title">Sign in</h2>
+            <form action="/login" method="POST">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+                <button class="button button-primary" type="submit">Sign in</button>
+            </form>
+            <p class="switch-link">New to FilerX? <a href="/register">Create an account</a></p>
+        </section>
+    </main>
 </body>
 </html>
